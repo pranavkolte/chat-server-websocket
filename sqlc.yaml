@@ -1,0 +1,18 @@
+version: "1"
+
+packages:
+  - name: "db"
+    path: "./db/postgres/sqlc"
+    queries: "./db/postgres/query/"
+    schema: "./db/postgres/migration/"
+    engine: "postgresql"
+    emit_json_tags: true
+    emit_prepared_queries: false
+    emit_interface: true
+    emit_exact_table_names: false
+    emit_empty_slices: true
+    overrides:
+      - db_type: "uuid"
+        go_type: "github.com/google/uuid.UUID"
+      - db_type: "timestamptz"
+        go_type: "time.Time"
