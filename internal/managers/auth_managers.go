@@ -1,4 +1,4 @@
-package authentication
+package managers
 
 type AuthenticationManager struct {
 }

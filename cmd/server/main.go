@@ -5,8 +5,10 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/pranavkolte/chat-server-websocket/authentication"
-	"github.com/pranavkolte/chat-server-websocket/config"
+	"github.com/pranavkolte/chat-server-websocket/internal/config"
+	"github.com/pranavkolte/chat-server-websocket/internal/handlers"
+	"github.com/pranavkolte/chat-server-websocket/internal/managers"
+	"github.com/pranavkolte/chat-server-websocket/internal/routes"
 )
 
 func main() {
@@ -25,8 +27,9 @@ func main() {
 
 	// Authentication router
 	authRouter := apiRouter.PathPrefix("/auth").Subrouter()
-	authenticationManager := authentication.NewAuthenticationManager()
-	authentication.RegisterRoutes(authRouter, authenticationManager)
+	authenticationManager := managers.NewAuthenticationManager()
+	authenticationHandler := &handlers.AuthenticationHandler{AuthenticationManager: authenticationManager}
+	routes.RegisterRoutes(authRouter, authenticationHandler)
 
 	// Start the server
 	log.Printf("Server starting on port %v", server_config.Port)
