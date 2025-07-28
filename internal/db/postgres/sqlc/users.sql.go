@@ -44,34 +44,12 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 	return i, err
 }
 
-const getUserByID = `-- name: GetUserByID :one
-SELECT user_id, username, name, email, password FROM users WHERE user_id = $1
+const getUserByEmail = `-- name: GetUserByEmail :one
+SELECT user_id, username, name, email, password FROM users WHERE email = $1
 `
 
-func (q *Queries) GetUserByID(ctx context.Context, userID uuid.UUID) (User, error) {
-	row := q.db.QueryRowContext(ctx, getUserByID, userID)
-	var i User
-	err := row.Scan(
-		&i.UserID,
-		&i.Username,
-		&i.Name,
-		&i.Email,
-		&i.Password,
-	)
-	return i, err
-}
-
-const verifyUser = `-- name: VerifyUser :one
-SELECT user_id, username, name, email, password FROM users WHERE email = $1 AND password = $2
-`
-
-type VerifyUserParams struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
-
-func (q *Queries) VerifyUser(ctx context.Context, arg VerifyUserParams) (User, error) {
-	row := q.db.QueryRowContext(ctx, verifyUser, arg.Email, arg.Password)
+func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUserByEmail, email)
 	var i User
 	err := row.Scan(
 		&i.UserID,

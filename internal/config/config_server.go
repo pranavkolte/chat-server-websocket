@@ -10,8 +10,8 @@ import (
 type ConfigServer struct {
 	SERVER_PORT       string
 	API_VERSION       string
-	DATA_SOURCE_NAME  string
 	POSTGRESQL_CONFIG ConfigPostgreSQL
+	AUTHENTICATION    ConfigAuthentication
 }
 
 type ConfigPostgreSQL struct {
@@ -21,6 +21,10 @@ type ConfigPostgreSQL struct {
 	USER           string
 	PASSWORD       string
 	CONNECTION_URL string
+}
+
+type ConfigAuthentication struct {
+	JWT_SECRET string
 }
 
 func LoadConfigServer() (*ConfigServer, error) {
@@ -62,9 +66,21 @@ func LoadConfigServer() (*ConfigServer, error) {
 		PASSWORD:       postgresPassword,
 		CONNECTION_URL: connectionURL,
 	}
+
+	authSecret := os.Getenv("JWT_SECRET")
+	if authSecret == "" {
+		log.Println("JWT_SECRET not set, using default secret 'your_secret_key'")
+		authSecret = "your_secret_key"
+	}
+
+	authConfig := ConfigAuthentication{
+		JWT_SECRET: authSecret,
+	}
+
 	return &ConfigServer{
 		SERVER_PORT:       port,
 		API_VERSION:       apiVersion,
 		POSTGRESQL_CONFIG: postgresConfig,
+		AUTHENTICATION:    authConfig,
 	}, nil
 }

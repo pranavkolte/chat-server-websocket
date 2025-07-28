@@ -12,6 +12,7 @@ import (
 	"github.com/pranavkolte/chat-server-websocket/internal/handlers"
 	"github.com/pranavkolte/chat-server-websocket/internal/managers"
 	"github.com/pranavkolte/chat-server-websocket/internal/routes"
+	"github.com/pranavkolte/chat-server-websocket/internal/util"
 )
 
 func main() {
@@ -23,6 +24,8 @@ func main() {
 	} else {
 		log.Println("Server config loaded........")
 	}
+
+	util.SetJWTSecret(server_config.AUTHENTICATION.JWT_SECRET)
 
 	log.Println("Setting up PostgreSQL DB")
 	pgdb, err := sql.Open("postgres", server_config.POSTGRESQL_CONFIG.CONNECTION_URL)

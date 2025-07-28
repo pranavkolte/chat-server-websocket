@@ -6,9 +6,11 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 	postgresdb "github.com/pranavkolte/chat-server-websocket/internal/db/postgres/sqlc"
 	"github.com/pranavkolte/chat-server-websocket/internal/managers"
 	"github.com/pranavkolte/chat-server-websocket/internal/schemas"
+	"github.com/pranavkolte/chat-server-websocket/internal/util"
 )
 
 type AuthenticationHandler struct {
@@ -16,9 +18,33 @@ type AuthenticationHandler struct {
 }
 
 func (authHandler *AuthenticationHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
+	var req schemas.LoginRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	user, err := authHandler.AuthenticationManager.GetUserByEmail(r.Context(), req.Email)
+
+	if err != nil {
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	if !util.CheckPasswordHash(req.Password, user.Password) {
+		http.Error(w, "Invalid email or password", http.StatusUnauthorized)
+		return
+	}
+
+	token, err := util.GenerateJWT(user.UserID.String(), user.Email)
+	if err != nil {
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	fmt.Fprintf(w, `{"message": "Login endpoint reached successfully"}`)
+	fmt.Fprintf(w, `{"user_id": "%v", "token": "%v"}`, user.UserID, token)
 }
 
 func (authHanlder *AuthenticationHandler) SignupHandler(w http.ResponseWriter, r *http.Request) {
@@ -31,17 +57,29 @@ func (authHanlder *AuthenticationHandler) SignupHandler(w http.ResponseWriter, r
 
 	userID := uuid.New()
 
+	hashedPassword, err := util.HashPassword(req.Password)
+	if err != nil {
+		http.Error(w, "Error hashing password", http.StatusInternalServerError)
+		return
+	}
+
 	params := postgresdb.CreateUserParams{
 		UserID:   userID,
 		Username: req.Username,
 		Name:     req.Name,
 		Email:    req.Email,
-		Password: req.Password,
+		Password: hashedPassword,
 	}
 
 	pgUser, err := authHanlder.AuthenticationManager.CreateUser(r.Context(), params)
 
 	if err != nil {
+		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == "23505" { // code for unique violation
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusConflict)
+			fmt.Fprintf(w, `{"error": "Username or email already exists"}`)
+			return
+		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
