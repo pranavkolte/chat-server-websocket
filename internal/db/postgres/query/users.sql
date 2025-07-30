@@ -5,3 +5,9 @@ RETURNING *;
 
 -- name: GetUserByEmail :one
 SELECT * FROM users WHERE email = $1;
+
+-- name: GetUsersPaginated :many
+SELECT user_id, username, name, email
+FROM users
+ORDER BY username
+LIMIT $1 OFFSET $2;

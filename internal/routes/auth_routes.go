@@ -6,7 +6,7 @@ import (
 )
 
 // api/v1/auth
-func RegisterRoutes(router *mux.Router, authenticationHandler *handlers.AuthenticationHandler) {
+func AuthRoutes(router *mux.Router, authenticationHandler *handlers.AuthenticationHandler) {
 	router.HandleFunc("/login", authenticationHandler.LoginHandler).Methods("POST")
 	router.HandleFunc("/signup", authenticationHandler.SignupHandler).Methods("POST")
 }

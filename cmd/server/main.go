@@ -35,6 +35,8 @@ func main() {
 		log.Println("Postgres DB connection complete.....")
 	}
 
+	log.Println(server_config.POSTGRESQL_CONFIG.CONNECTION_URL)
+
 	pgqueries := postgresdb.New(pgdb)
 
 	// Create a new gorilla/mux router
@@ -47,7 +49,13 @@ func main() {
 	authRouter := apiRouter.PathPrefix("/auth").Subrouter()
 	authenticationManager := managers.NewAuthenticationManager(pgqueries)
 	authenticationHandler := &handlers.AuthenticationHandler{AuthenticationManager: authenticationManager}
-	routes.RegisterRoutes(authRouter, authenticationHandler)
+	routes.AuthRoutes(authRouter, authenticationHandler)
+
+	// User router
+	userRouter := apiRouter.PathPrefix("/users").Subrouter()
+	userManager := managers.NewUserManager(pgqueries)
+	userHandler := &handlers.UserHandler{UserManager: userManager}
+	routes.UserRoutes(userRouter, userHandler)
 
 	// Start the server
 	log.Printf("Server starting on port %v", server_config.SERVER_PORT)
