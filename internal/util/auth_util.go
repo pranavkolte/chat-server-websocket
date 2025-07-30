@@ -13,6 +13,10 @@ func SetJWTSecret(secret string) {
 	jwtSecret = []byte(secret)
 }
 
+func GetJWTSecret() []byte {
+	return jwtSecret
+}
+
 func HashPassword(password string) (string, error) {
 	hasedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {

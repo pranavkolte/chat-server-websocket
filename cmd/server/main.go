@@ -11,6 +11,7 @@ import (
 	postgresdb "github.com/pranavkolte/chat-server-websocket/internal/db/postgres/sqlc"
 	"github.com/pranavkolte/chat-server-websocket/internal/handlers"
 	"github.com/pranavkolte/chat-server-websocket/internal/managers"
+	"github.com/pranavkolte/chat-server-websocket/internal/middleware"
 	"github.com/pranavkolte/chat-server-websocket/internal/routes"
 	"github.com/pranavkolte/chat-server-websocket/internal/util"
 )
@@ -44,6 +45,7 @@ func main() {
 
 	// Create API subrouter
 	apiRouter := mainRouter.PathPrefix("/api/" + server_config.API_VERSION).Subrouter()
+	apiRouter.Use(middleware.JWTAuthMiddleware)
 
 	// Authentication router
 	authRouter := apiRouter.PathPrefix("/auth").Subrouter()
